@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include "lzw.hh" // Inclui o cabeçalho com as definições das funções
+#include "LZW.hh" // Inclui o cabeçalho com as definições das funções
 
 // Função para exibir a mensagem de uso da CLI
 void showUsage() {
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 
     // Objeto LZWCodec
     // LZWCodec lzw;
-    LZWCodec lzw(16, 0, true, true);
+    LZW lzw(16, 0, true, true);
 
     // Comprime ou descomprime os dados, conforme especificado pela operação
     if (operation == "-c") {
