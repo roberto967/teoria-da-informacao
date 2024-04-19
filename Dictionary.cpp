@@ -1,5 +1,3 @@
-// Dictionary.cpp
-
 #include "Dictionary.hh"
 
 CodeString::CodeString(byte newByte, unsigned pI) : prefixIndex(pI), first(~0U), nextLeft(~0U), nextRight(~0U), k(newByte) { }
