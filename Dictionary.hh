@@ -1,5 +1,3 @@
-// Dictionary.hh
-
 #ifndef DICTIONARY_HH
 #define DICTIONARY_HH
 

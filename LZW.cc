@@ -9,53 +9,22 @@
 LZW::LZW(unsigned maxBits1, unsigned maxBits2, bool verbose, bool printTime): verbose(verbose), printTime(printTime), maxBits1(maxBits1), maxBits2(maxBits2) { }
 
 void LZW::encode(const std::vector<unsigned char>& input, std::vector<unsigned char>& encoded) {
-  if (maxBits2 < maxBits1) maxBits2 = maxBits1;
-
-  unsigned bestBits = 0;
-  size_t bestSize = 0;
   clock_t iTime = 0;
 
-  // Inicialize o número total de bits codificados e o número total de símbolos
-  size_t totalBits = 0;
-  size_t numSymbols = 0;
+  encoded.clear();
 
-  for (unsigned maxBits = maxBits1; maxBits <= maxBits2; ++maxBits) {
-    if (printTime) iTime = std::clock();
+  if (printTime) iTime = std::clock();
+  
+  compress(input, encoded, maxBits1);
+  
+  if (verbose) {
+    std::cout << "LZW: maxBits=" << maxBits1 << ", size=" << encoded.size();
+    
+    if (printTime)
+      std::cout << "  (" << int(100.0 * (std::clock() - iTime) / CLOCKS_PER_SEC + .5) / 100.0 << " seconds)";
 
-    // Calcula o número total de bits antes de codificar
-    totalBits = encoded.size() * 8;
-
-    compress(input, encoded, maxBits);
-
-    // Calcula o número total de bits após a codificação
-    totalBits = encoded.size() * 8 - totalBits;
-
-    // Calcula o número total de símbolos
-    numSymbols = input.size();
-
-    // Calcula o comprimento médio dos bits por símbolo
-    double avgBitsPerSymbol = static_cast<double>(totalBits) / numSymbols;
-
-    if (maxBits == maxBits1 || encoded.size() <= bestSize) {
-      bestBits = maxBits;
-      bestSize = encoded.size();
-    }
-
-    if (verbose) {
-      std::cout << "LZW: maxBits=";
-      std::cout.width(2);
-      std::cout << maxBits << ", size=";
-      std::cout.width(10);
-      std::cout << encoded.size();
-      if (printTime)
-        std::cout << "  (" << int(100.0*(std::clock()-iTime)/CLOCKS_PER_SEC+.5)/100.0 << " seconds)"; std::cout << std::endl;
-    }
-
-    if (encoded.size() < (1U << maxBits)) break;
+    std::cout << std::endl;
   }
-
-  if(bestBits != maxBits2)
-    compress(input, encoded, bestBits);
 }
 
 void LZW::decode(const std::vector<byte>& encoded, std::vector<byte>& decoded) {
@@ -111,7 +80,7 @@ void LZW::decode(const std::vector<byte>& encoded, std::vector<byte>& decoded) {
   }
 }
 
-void LZW::compress(const std::vector<byte>& input, std::vector<byte>& encoded, unsigned maxBits) {
+void LZW::compress(const std::vector<byte> &input, std::vector<byte> & encoded, unsigned maxBits) {
   assert(maxBits < 32);
   const size_t size = input.size();
 
@@ -126,10 +95,6 @@ void LZW::compress(const std::vector<byte>& input, std::vector<byte>& encoded, u
   const unsigned codeStart = byteMapSize + 1;
 
   const unsigned minBits = requiredBits(codeStart);
-
-  std::cout << "MIN BITS " << minBits << std::endl;
-  std::cout << "MAX BITS " << maxBits << std::endl;
-  std::cout << "CODE START " << codeStart << std::endl;
 
   if (maxBits < minBits) maxBits = minBits;
 
@@ -149,9 +114,6 @@ void LZW::compress(const std::vector<byte>& input, std::vector<byte>& encoded, u
   CodeString currentString;
   unsigned currentBits = minBits;
   unsigned nextBitIncLimit = (1 << minBits) - 1;
-
-  std::cout << "CURRENT BITS " << currentBits << std::endl;
-  std::cout << "NEXT BIT " << nextBitIncLimit << std::endl;
 
   for (size_t i = 0; i < size; ++i) {
     currentString.k = byteMap[input[i]];
@@ -179,8 +141,8 @@ void LZW::compress(const std::vector<byte>& input, std::vector<byte>& encoded, u
   writer.write(eoiCode, currentBits);
 
   // Calculando o comprimento médio dos bits por símbolo
-  double avgBitsPerSymbol = static_cast<double>(encoded.size() * 8) / size;
-  std::cout << "Average bits per symbol: " << avgBitsPerSymbol << std::endl;
+  // double avgBitsPerSymbol = static_cast<double>(encoded.size() * 8) / size;
+  // std::cout << "Average bits per symbol: " << avgBitsPerSymbol << std::endl;
 }
 
 // Maps bytes in the input to the lowest possible values:
