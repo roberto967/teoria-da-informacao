@@ -46,6 +46,7 @@ namespace lzw {
         public :
             input_symbol_stream(T &);
             bool operator>>(char &c);
+            std::streampos get_size();
     };
 
     //
@@ -90,6 +91,7 @@ namespace lzw {
         public :
             output_code_stream(T &, unsigned int);
             void operator<<(const unsigned int i);
+            unsigned int get_code_size_bits();
     };
 
 };

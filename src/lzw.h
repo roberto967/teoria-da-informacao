@@ -25,53 +25,66 @@ namespace lzw {
             strings[i] = std::string(1, i);
     }
 
-    template<class INPUT, class OUTPUT> void compress(INPUT &input, OUTPUT &output, const unsigned int max_code) {
-        int flagEstrategiaDicionario = 0;
+    unsigned int bitsNeeded(unsigned int code) {
+        return static_cast<unsigned int>(std::ceil(std::log2(code + 1)));
+    }
 
-        input_symbol_stream<INPUT> in(input);
-        output_code_stream<OUTPUT> out(output, max_code);
-
-        std::unordered_map<std::string, unsigned int> codes((max_code * 11) / 10);
-
-        resetDictionary(codes);
-        std::cout << "RESET DICTIONARY " << codes.size() << std::endl;
-
-        unsigned int next_code = 257;
-        std::string current_string;
-        char c;
-
-        while (in >> c) {
-            current_string = current_string + c;
-
-            if (codes.find(current_string) == codes.end()) {
-                if (isDictionaryFull(next_code, max_code)) {
-                    if (flagEstrategiaDicionario == 0) {
-                        resetDictionary(codes);
-                        next_code = 257;
-
-                        std::cout << "RESET DICTIONARY " << codes.size() << std::endl;
-                        std::cout << "RESET DICTIONARY NEXT CODE " << next_code << std::endl;
-                    }
-                } else {
-                    codes[current_string] = next_code++;
-                }
-
-                current_string.erase(current_string.size() - 1);
-
-                // std::cout << "CURRENT STRING " << current_string << std::endl;
-                // std::cout << "CODES[CURRENT STRING] " << codes[current_string] << std::endl;
-
-                out << codes[current_string];
-
-                // std::cout << "Código para " << current_string << " requer " << static_cast<int>(std::ceil(std::log2(next_code - 1))) << " bits." << std::endl;
-                // std::cout << std::endl;
-
-                current_string = c;
-            }
+    template<class INPUT, class OUTPUT> void compress(INPUT &input, OUTPUT &output, const unsigned int max_code, std::vector<std::vector<char>> &conteudoArquivosBinarios) {
+        for (const auto& conteudo : conteudoArquivosBinarios) {
+            std::cout << "Tamanho do arquivo: " << conteudo.size() << " bytes" << std::endl;
         }
+        
+        // int flagEstrategiaDicionario = 0;
 
-        if (current_string.size())
-            out << codes[current_string];
+        // input_symbol_stream<INPUT> in(input);
+        // output_code_stream<OUTPUT> out(output, max_code);
+
+        // std::unordered_map<std::string, unsigned int> codes((max_code * 11) / 10);
+
+        // resetDictionary(codes);
+
+        // unsigned int next_code = 257;
+        // std::string current_string;
+        // char c;
+
+        // unsigned int total_bits = 0;
+
+        // while (in >> c) {
+        //     current_string = current_string + c;
+
+        //     if (codes.find(current_string) == codes.end()) {
+        //         if (isDictionaryFull(next_code, max_code)) {
+        //             if (flagEstrategiaDicionario == 0) {
+        //                 resetDictionary(codes);
+        //                 next_code = 257;
+        //             }
+        //         } else {
+        //             codes[current_string] = next_code++;
+        //         }
+
+        //         current_string.erase(current_string.size() - 1);
+
+        //         out << codes[current_string];
+
+        //         unsigned int bits_used = out.get_code_size_bits();
+
+        //         total_bits += bits_used;
+
+        //         current_string = c;
+        //     }
+        // }
+
+        // if (current_string.size()) {
+        //     out << codes[current_string];
+
+        //     unsigned int bits_used = out.get_code_size_bits();
+
+        //     total_bits += bits_used;
+        // }
+
+        // std::streampos size = in.get_size();
+
+        // std::cout << "SIZE IN " << size << std::endl;
     }
 
     template<class INPUT, class OUTPUT> void decompress(INPUT &input, OUTPUT &output, const unsigned int max_code) {

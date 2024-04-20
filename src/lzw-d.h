@@ -30,6 +30,16 @@ namespace lzw {
                 else
                     return true;
             }
+
+            std::streampos get_size() {
+                std::streampos currentPosition = m_input.tellg();
+                m_input.seekg(0, std::ios::end);
+
+                std::streampos size = m_input.tellg();
+                m_input.seekg(currentPosition, std::ios::beg); // Restaura a posição do ponteiro
+
+                return size;
+            }
     };
 
     //
@@ -64,7 +74,7 @@ namespace lzw {
     // and from then on the code size is fixed.
     //
     template<> class output_code_stream<std::ostream> {
-        private :
+        private:
             int m_code_size;
             std::ostream & m_output;
             int m_pending_bits;
@@ -81,7 +91,7 @@ namespace lzw {
                 }
             }
        
-        public :
+        public:
             output_code_stream(std::ostream &output, unsigned int max_code) : 
                 m_output(output),
                 m_pending_bits(0),
@@ -110,8 +120,10 @@ namespace lzw {
                         m_code_size++;
                     }
                 }
+            }
 
-                // std::cout << "M_NEXT_BUMP " << m_next_bump << std::endl;
+            unsigned int get_code_size_bits() {
+                return m_code_size;
             }
     };
 
