@@ -8,70 +8,78 @@
 
 #define _ITERATOR_DEBUG_LEVEL 0
 
+enum TamanhoDicionario {
+  K_4   = 4096,
+  K_32  = 32768,
+  K_256 = 262144,
+  M_2   = 2097152
+};
+
 void usage() {
-    std::cerr << 
-        "Usage:\n"
-        "lzw [-max max_code] -c input output #compress file input to file output\n"
-        "lzw [-max max_code] -c - output     #compress stdin to file otuput\n"
-        "lzw [-max max_code] -c input        #compress file input to stdout\n"
-        "lzw [-max max_code] -c              #compress stdin to stdout\n"
-        "lzw [-max max_code] -d input output #decompress file input to file output\n"
-        "lzw [-max max_code] -d - output     #decompress stdin to file otuput\n"
-        "lzw [-max max_code] -d input        #decompress file input to stdout\n"
-        "lzw [-max max_code] -d              #decompress stdin to stdout\n";
-    exit(1);
+  std::cerr << 
+    "Usage:\n"
+    "lzw [-max max_code] -c input output #compress file input to file output\n"
+    "lzw [-max max_code] -c - output     #compress stdin to file otuput\n"
+    "lzw [-max max_code] -c input        #compress file input to stdout\n"
+    "lzw [-max max_code] -c              #compress stdin to stdout\n"
+    "lzw [-max max_code] -d input output #decompress file input to file output\n"
+    "lzw [-max max_code] -d - output     #decompress stdin to file otuput\n"
+    "lzw [-max max_code] -d input        #decompress file input to stdout\n"
+    "lzw [-max max_code] -d              #decompress stdin to stdout\n";
+  exit(1);
 }
 
-int main(int argc, char* argv[]) {
-    int max_code = 2097151;
+int main(int argc, char *argv[]) {
+  int max_code = 2097151;
 
-    if (argc >= 2 && !strcmp( "-max", argv[1])) {
-        if (sscanf( argv[2], "%d", &max_code ) != 1) usage();
-        
-        argc -= 2;
-        argv += 2;
+  if (argc >= 2 && !strcmp( "-max", argv[1])) {
+    if (sscanf( argv[2], "%d", &max_code ) != 1) usage();
+    
+    argc -= 2;
+    argv += 2;
+  }
+  
+  if (argc < 2) usage();
+  
+  bool compress;
+      
+  if (std::string("-c") == argv[1])
+    compress = true;
+  else if (std::string("-d") == argv[1])
+    compress = false;
+  else usage();
+  
+  std::istream *in = &std::cin;
+  std::ostream *out = &std::cout;
+  
+  bool delete_instream = false;
+  bool delete_ostream = false;
+  
+  if (argc == 3) {
+    in = new std::ifstream(argv[2]);
+    delete_instream = true;
+  }
+
+  if (argc == 4) {
+    out = new std::ofstream(argv[3]);
+    
+    delete_ostream = true;
+
+    if (std::string("-") != argv[2]) {
+      in = new std::ifstream(argv[2]);
+
+      delete_instream = true;
     }
-    
-    if (argc < 2) usage();
-    
-    bool compress;
-        
-    if (std::string("-c") == argv[1])
-        compress = true;
-    else if (std::string("-d") == argv[1])
-        compress = false;
-    else usage();
-    
-    std::istream *in = &std::cin;
-    std::ostream *out = &std::cout;
-    
-    bool delete_instream = false;
-    bool delete_ostream = false;
-    
-    if (argc == 3) {
-        in = new std::ifstream(argv[2]);
-        delete_instream = true;
-    }
+  }
 
-    if (argc == 4) {
-        out = new std::ofstream(argv[3]);
-        
-        delete_ostream = true;
-
-        if (std::string("-") != argv[2]) {
-            in = new std::ifstream(argv[2]);
-
-            delete_instream = true;
-        }
-    }
-
-    if (compress)
-        lzw::compress(*in, *out, max_code);
-    else
-        lzw::decompress(*in, *out, max_code);
-    if (delete_instream)
-        delete in;
-    if (delete_ostream)
-        delete out;
-    return 0;
+  if (compress)
+    lzw::compress(*in, *out, max_code);
+  else
+    lzw::decompress(*in, *out, max_code);
+  if (delete_instream)
+    delete in;
+  if (delete_ostream)
+    delete out;
+  
+  return 0;
 }

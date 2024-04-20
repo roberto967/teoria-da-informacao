@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 namespace lzw {
+
     template<class INPUT, class OUTPUT> void compress(INPUT &input, OUTPUT &output, const unsigned int max_code = 32767) {
         input_symbol_stream<INPUT> in(input);
         output_code_stream<OUTPUT> out(output, max_code);
@@ -34,7 +35,6 @@ namespace lzw {
         if (current_string.size())
             out << codes[current_string];
     }
-
 
     template<class INPUT, class OUTPUT> void decompress(INPUT &input, OUTPUT &output, const unsigned int max_code = 32767) {
         input_code_stream<INPUT> in(input, max_code);
