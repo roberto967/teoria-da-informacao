@@ -30,10 +30,12 @@ void usage() {
 }
 
 int main(int argc, char *argv[]) {
-  int max_code = 2097151;
+  TamanhoDicionario tamanhoPadraoDicionario = M_2;
 
-  if (argc >= 2 && !strcmp( "-max", argv[1])) {
-    if (sscanf( argv[2], "%d", &max_code ) != 1) usage();
+  int max_code = tamanhoPadraoDicionario;
+
+  if (argc >= 2 && !strcmp("-max", argv[1])) {
+    if (sscanf(argv[2], "%d", &max_code) != 1) usage();
     
     argc -= 2;
     argv += 2;
@@ -43,10 +45,8 @@ int main(int argc, char *argv[]) {
   
   bool compress;
       
-  if (std::string("-c") == argv[1])
-    compress = true;
-  else if (std::string("-d") == argv[1])
-    compress = false;
+  if (std::string("-c") == argv[1]) compress = true;
+  else if (std::string("-d") == argv[1]) compress = false;
   else usage();
   
   std::istream *in = &std::cin;
@@ -72,14 +72,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (compress)
+  if (compress) {
     lzw::compress(*in, *out, max_code);
-  else
+  } else {
     lzw::decompress(*in, *out, max_code);
-  if (delete_instream)
-    delete in;
-  if (delete_ostream)
-    delete out;
+  }
   
+  if (delete_instream) delete in;
+  if (delete_ostream) delete out;
+
   return 0;
 }

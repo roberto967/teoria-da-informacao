@@ -34,6 +34,7 @@
 #include <string>
 
 namespace lzw {
+    
     //
     // The input symbol stream class reads symbols until some stopping point.
     // The stopping point will be determined by your specialized implemenation
@@ -41,7 +42,6 @@ namespace lzw {
     // until either an EOF is reached, or a pre-specified number of symbols
     // are read.
     //
-
     template<typename T> class input_symbol_stream {
         public :
             input_symbol_stream(T &);

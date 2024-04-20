@@ -2,6 +2,7 @@
 #define LZW_D_DOT_H
 
 #include <iostream>
+#include <vector>
 
 #include "lzw_streambase.h"
 
@@ -9,7 +10,6 @@
 // I'm using ifstream and ofstream for my input and output. This means
 // I need to create four specialized routines that read and write
 // symbols and codes.
-
 namespace lzw {
     //
     // It's tempting to try to read characters using the ifstream
@@ -110,8 +110,9 @@ namespace lzw {
                         m_code_size++;
                     }
                 }
+
+                // std::cout << "M_NEXT_BUMP " << m_next_bump << std::endl;
             }
-    
     };
 
     //
