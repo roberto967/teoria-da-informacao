@@ -35,6 +35,9 @@
 
 namespace lzw {
     
+    const unsigned int EOF_CODE = 256;
+    const unsigned int SEPARATOR_FILE = 257;
+
     //
     // The input symbol stream class reads symbols until some stopping point.
     // The stopping point will be determined by your specialized implemenation
@@ -73,8 +76,6 @@ namespace lzw {
     // implementor, but the most common will probably be
     // variable length codes ranging from 9 to 16 or so bits.
     //
-    const unsigned int EOF_CODE = 256;
-    
     template<typename T> class input_code_stream {
         public :
             input_code_stream(T &, unsigned int);

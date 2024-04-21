@@ -30,61 +30,63 @@ namespace lzw {
     }
 
     template<class INPUT, class OUTPUT> void compress(INPUT &input, OUTPUT &output, const unsigned int max_code, std::vector<std::vector<char>> &conteudoArquivosBinarios) {
-        for (const auto& conteudo : conteudoArquivosBinarios) {
-            std::cout << "Tamanho do arquivo: " << conteudo.size() << " bytes" << std::endl;
-        }
+        int flagEstrategiaDicionario = 0;
         
-        // int flagEstrategiaDicionario = 0;
+        input_symbol_stream<INPUT> in(input);
+        output_code_stream<OUTPUT> out(output, max_code);
 
-        // input_symbol_stream<INPUT> in(input);
-        // output_code_stream<OUTPUT> out(output, max_code);
+        std::unordered_map<std::string, unsigned int> codes((max_code * 11) / 10);
 
-        // std::unordered_map<std::string, unsigned int> codes((max_code * 11) / 10);
+        resetDictionary(codes);
 
-        // resetDictionary(codes);
+        unsigned int next_code = 258;
+        std::string current_string;
+        char c;
 
-        // unsigned int next_code = 257;
-        // std::string current_string;
-        // char c;
+        unsigned int total_bits = 0;
 
-        // unsigned int total_bits = 0;
+        for (const auto &conteudo : conteudoArquivosBinarios) {
+            for (auto symbol : conteudo) {
+                c = symbol;
 
-        // while (in >> c) {
-        //     current_string = current_string + c;
+                current_string = current_string + c;
 
-        //     if (codes.find(current_string) == codes.end()) {
-        //         if (isDictionaryFull(next_code, max_code)) {
-        //             if (flagEstrategiaDicionario == 0) {
-        //                 resetDictionary(codes);
-        //                 next_code = 257;
-        //             }
-        //         } else {
-        //             codes[current_string] = next_code++;
-        //         }
+                if (codes.find(current_string) == codes.end()) {
+                    if (isDictionaryFull(next_code, max_code)) {
+                        if (flagEstrategiaDicionario == 0) {
+                            resetDictionary(codes);
+                            next_code = 258;
+                        }
+                    } else {
+                        codes[current_string] = next_code++;
+                    }
 
-        //         current_string.erase(current_string.size() - 1);
+                    current_string.erase(current_string.size() - 1);
 
-        //         out << codes[current_string];
+                    out << codes[current_string];
 
-        //         unsigned int bits_used = out.get_code_size_bits();
+                    unsigned int bits_used = out.get_code_size_bits();
 
-        //         total_bits += bits_used;
+                    total_bits += bits_used;
 
-        //         current_string = c;
-        //     }
-        // }
+                    current_string = c;
+                }
+            }
 
-        // if (current_string.size()) {
-        //     out << codes[current_string];
+            if (current_string.size()) {
+                out << codes[current_string];
 
-        //     unsigned int bits_used = out.get_code_size_bits();
+                unsigned int bits_used = out.get_code_size_bits();
 
-        //     total_bits += bits_used;
-        // }
+                total_bits += bits_used;
+            }
 
-        // std::streampos size = in.get_size();
+            out << SEPARATOR_FILE;
 
-        // std::cout << "SIZE IN " << size << std::endl;
+            std::streampos size = in.get_size();
+
+            std::cout << "SIZE IN " << size << std::endl;
+        }
     }
 
     template<class INPUT, class OUTPUT> void decompress(INPUT &input, OUTPUT &output, const unsigned int max_code) {
@@ -100,22 +102,24 @@ namespace lzw {
         std::string previous_string;
         
         unsigned int code;
-        unsigned int next_code = 257;
+        unsigned int next_code = 258;
 
         while (in >> code) {
             if (strings.find(code) == strings.end()) {
                 strings[code] = previous_string + previous_string[0];
-
-                std::cout << "PREVIOUS STRING + PREVIOUS STRING[0] " << previous_string + previous_string[0] << std::endl;
             }
             
+            if (code == SEPARATOR_FILE) {
+                break;
+            }
+
             out << strings[code];
             
             if (previous_string.size()) {
                 if (isDictionaryFull(next_code, max_code)) {
                     if (flagEstrategiaDicionario == 0) {
                         resetDictionary(strings);
-                        next_code = 257;
+                        next_code = 258;
                     }
                 } else {
                     strings[next_code++] = previous_string + strings[code][0];

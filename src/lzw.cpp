@@ -23,8 +23,7 @@ std::vector<char> lerArquivoBinario(const fs::path &arquivo) {
   std::vector<char> conteudo;
 
   if (arquivoStream.is_open()) {
-    // Move o ponteiro do arquivo para o final para determinar o tamanho do
-    // arquivo
+    // Move o ponteiro do arquivo para o final para determinar o tamanho do arquivo
     arquivoStream.seekg(0, std::ios::end);
     std::streamsize tamanhoArquivo = arquivoStream.tellg();
     arquivoStream.seekg(0, std::ios::beg);
@@ -157,8 +156,6 @@ int main(int argc, char *argv[]) {
 
   bool delete_instream = false;
   bool delete_ostream = false;
-
-  std::cout << "ARGC " << argc << std::endl;
 
   if (argc == 3) {
     in = new std::ifstream(argv[2]);
