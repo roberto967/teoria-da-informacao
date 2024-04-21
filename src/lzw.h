@@ -45,48 +45,42 @@ namespace lzw {
 
         unsigned int total_bits = 0;
 
-        for (const auto &conteudo : conteudoArquivosBinarios) {
-            for (auto symbol : conteudo) {
-                c = symbol;
+        while (in >> c) {
+            current_string = current_string + c;
 
-                current_string = current_string + c;
-
-                if (codes.find(current_string) == codes.end()) {
-                    if (isDictionaryFull(next_code, max_code)) {
-                        if (flagEstrategiaDicionario == 0) {
-                            resetDictionary(codes);
-                            next_code = 258;
-                        }
-                    } else {
-                        codes[current_string] = next_code++;
+            if (codes.find(current_string) == codes.end()) {
+                if (isDictionaryFull(next_code, max_code)) {
+                    if (flagEstrategiaDicionario == 0) {
+                        resetDictionary(codes);
+                        next_code = 258;
                     }
-
-                    current_string.erase(current_string.size() - 1);
-
-                    out << codes[current_string];
-
-                    unsigned int bits_used = out.get_code_size_bits();
-
-                    total_bits += bits_used;
-
-                    current_string = c;
+                } else {
+                    codes[current_string] = next_code++;
                 }
-            }
 
-            if (current_string.size()) {
+                current_string.erase(current_string.size() - 1);
+
                 out << codes[current_string];
 
                 unsigned int bits_used = out.get_code_size_bits();
 
                 total_bits += bits_used;
+
+                current_string = c;
             }
-
-            out << SEPARATOR_FILE;
-
-            std::streampos size = in.get_size();
-
-            std::cout << "SIZE IN " << size << std::endl;
         }
+
+        if (current_string.size()) {
+            out << codes[current_string];
+
+            unsigned int bits_used = out.get_code_size_bits();
+
+            total_bits += bits_used;
+        }
+
+        std::streampos size = in.get_size();
+
+        std::cout << "SIZE IN " << size << std::endl;
     }
 
     template<class INPUT, class OUTPUT> void decompress(INPUT &input, OUTPUT &output, const unsigned int max_code) {
