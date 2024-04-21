@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <utility>
 
 #include "lzw-d.h"
 #include "lzw.h"
@@ -19,6 +20,8 @@ enum TamanhoDicionario {
   K_256 = 262144,
   M_2 = 2097152
 };
+
+enum EstrategiaDicionario { RESETA = 0, MANTER = 1 };
 
 std::vector<char> lerArquivoBinario(const fs::path &arquivo) {
   std::ifstream arquivoStream(arquivo, std::ios::binary);
@@ -113,15 +116,19 @@ string tamDicToString(const int &tamDic) {
   }
 }
 
-void menu(const int &tamAtualDic) {
+void menu(const int &tamAtualDic, const int &flagEstrategiaDicionario) {
   cout << "!!! O tamanho atual do dicionario eh : "
        << tamDicToString(tamAtualDic) << " !!!" << endl;
+  cout << "!!! A estrategia atual do dicionario eh : "
+       << (flagEstrategiaDicionario == 0 ? "RESETA" : "MANTEM") << " !!!"
+       << endl;
   cout << "Escolha uma opcao:" << endl;
   cout << "1 - Comprimir arquivos" << endl;
   cout << "2 - Descomprimir arquivos" << endl;
   cout << "3 - Listar arquivos" << endl;
   cout << "4 - Alterar tamanho do dicionario" << endl;
   cout << "5 - Alterar pasta" << endl;
+  cout << "6 - Alterar estrategia do dicionario" << endl;
   cout << "0 - Sair" << endl;
   cout << "-------------------" << endl;
   cout << "Opcao: ";
@@ -139,19 +146,20 @@ vector<string> getFiles(const string &nomePasta) {
 
 using namespace std;
 
-int contarSimbolosNoArquivo(const string& nomeArquivo) {
-    ifstream arquivo(nomeArquivo, ios::binary);
-    int simbolos = 0;
+int contarSimbolosNoArquivo(const string &nomeArquivo) {
+  ifstream arquivo(nomeArquivo, ios::binary);
+  int simbolos = 0;
 
-    char c;
-    while (arquivo.get(c)) {
-      simbolos++;
-    }
+  char c;
+  while (arquivo.get(c)) {
+    simbolos++;
+  }
 
-    return simbolos;
+  return simbolos;
 }
 
-vector<string> outNameFiles(const vector<string> &arquivos, const bool &compress) {
+vector<string> outNameFiles(const vector<string> &arquivos,
+                            const bool &compress) {
   vector<string> outNames;
 
   string saida = compress ? "_compress" : "_decompress";
@@ -164,7 +172,8 @@ vector<string> outNameFiles(const vector<string> &arquivos, const bool &compress
   return outNames;
 }
 
-void comprimirDescomprimir(const string &nomePasta, const bool &compress, const int &max_code) {
+void comprimirDescomprimir(const string &nomePasta, const bool &compress,
+                           const int &max_code, const int &estrategiaAtual) {
   vector<string> arquivos = getFiles(nomePasta);
   vector<string> outNames = outNameFiles(arquivos, compress);
 
@@ -178,7 +187,8 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress, const 
     string nomeArquivoDestino = outNames[i];
 
     istream *in = new ifstream(nomeArquivoOrigem, ios::binary);
-    ostream *out = new ofstream(pastaDestino + '/' + nomeArquivoDestino, ios::binary);
+    ostream *out =
+        new ofstream(pastaDestino + '/' + nomeArquivoDestino, ios::binary);
 
     if (compress) {
       // L = N / M
@@ -186,14 +196,26 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress, const 
       // N - número total de bits após a compressão
       // M - número total de símbolos no arquivo original
 
-      int total_bits = lzw::compress(*in, *out, max_code);
+      pair<int, long double> result =
+          lzw::compress(*in, *out, max_code, estrategiaAtual);
 
-      double comprimento_medio = static_cast<double>(total_bits) / fs::file_size(nomeArquivoOrigem);
-      std::cout << "L = " << std::setprecision(4) << comprimento_medio << nomeArquivoOrigem << std::endl;
+      int total_bits = result.first;
+      long double tempoDeCompressao = result.second;
+
+      double comprimento_medio =
+          static_cast<double>(total_bits) / fs::file_size(nomeArquivoOrigem);
+      std::cout << "L = " << std::setprecision(4) << comprimento_medio << " "
+                << nomeArquivoOrigem << std::endl;
+
+      cout << "Tempo de compressao do arquivo " << nomeArquivoOrigem << ": "
+           << tempoDeCompressao << "ms" << endl;
 
       comprimento_medio_total += comprimento_medio;
     } else {
-      lzw::decompress(*in, *out, max_code);
+      long double tempoDeDescomp = lzw::decompress(*in, *out, max_code, estrategiaAtual);
+			
+			cout << "Tempo de descompressao do arquivo " << nomeArquivoOrigem << ": "
+					 << tempoDeDescomp << "ms" << endl;
     }
 
     delete in;
@@ -202,8 +224,10 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress, const 
 
   std::cout << std::endl;
   std::cout << "--------------------------------------------" << std::endl;
-  std:cout << "(comprimento médio total da compressão)" << std::endl;
-  std::cout << "L = " << std::setprecision(4) << comprimento_medio_total << std::endl;
+
+  cout << "(comprimento médio total da compressão)" << std::endl;
+  std::cout << "L = " << std::setprecision(4) << comprimento_medio_total
+            << std::endl;
   std::cout << "--------------------------------------------" << std::endl;
   std::cout << std::endl;
 }
@@ -213,6 +237,7 @@ int main(int argc, char *argv[]) {
   string nomePasta;
 
   int max_code = M_2;
+  int estrategiaAtual = MANTER;
 
   cout << "Digite o nome da pasta que contem os arquivos: ";
   cin >> nomePasta;
@@ -221,20 +246,21 @@ int main(int argc, char *argv[]) {
   listarArquivos(nomePasta);
 
   do {
-    menu(max_code);
+    menu(max_code, estrategiaAtual);
     cin >> opcao;
     cin.ignore();
 
     switch (opcao) {
     case 1: {
-      comprimirDescomprimir(nomePasta, true, max_code);
+      comprimirDescomprimir(nomePasta, true, max_code, estrategiaAtual);
       break;
     }
     case 2: {
-      comprimirDescomprimir(nomePasta, false, max_code);
+      comprimirDescomprimir(nomePasta, false, max_code, estrategiaAtual);
       break;
     }
     case 3: {
+      cout << "!!! Pasta Atual " << nomePasta << " !!!" << endl;
       listarArquivos(nomePasta);
       break;
     }
@@ -269,6 +295,15 @@ int main(int argc, char *argv[]) {
       cin >> nomePasta;
       arquivos = getFiles(nomePasta);
       listarArquivos(nomePasta);
+      break;
+    }
+    case 6: {
+      cout << "Escolha a estrategia do dicionario:" << endl;
+      cout << "0 - RESETA" << endl;
+      cout << "1 - MANTER" << endl;
+      cout << "-------------------" << endl;
+      cout << "Opcao: ";
+      cin >> estrategiaAtual;
       break;
     }
     case 0:
