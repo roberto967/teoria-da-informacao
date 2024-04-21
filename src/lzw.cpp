@@ -81,8 +81,6 @@ int main(int argc, char *argv[]) {
   
   bool delete_instream = false;
   bool delete_ostream = false;
-  
-  std::cout << "ARGC " << argc << std::endl;
 
   if (argc == 3) {
     in = new std::ifstream(argv[2]);
