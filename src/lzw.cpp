@@ -7,6 +7,8 @@
 #include "lzw.h"
 #include "lzw_streambase.h"
 
+#include <unordered_set>
+
 #define _ITERATOR_DEBUG_LEVEL 0
 
 namespace fs = std::filesystem;
@@ -137,8 +139,19 @@ vector<string> getFiles(const string &nomePasta) {
 
 using namespace std;
 
-vector<string> outNameFiles(const vector<string> &arquivos,
-                            const bool &compress) {
+int contarSimbolosNoArquivo(const string& nomeArquivo) {
+    ifstream arquivo(nomeArquivo, ios::binary);
+    int simbolos = 0;
+
+    char c;
+    while (arquivo.get(c)) {
+      simbolos++;
+    }
+
+    return simbolos;
+}
+
+vector<string> outNameFiles(const vector<string> &arquivos, const bool &compress) {
   vector<string> outNames;
 
   string saida = compress ? "_compress" : "_decompress";
@@ -151,24 +164,34 @@ vector<string> outNameFiles(const vector<string> &arquivos,
   return outNames;
 }
 
-void comprimirDescomprimir(const string &nomePasta, const bool &compress,
-                           const int &max_code) {
+void comprimirDescomprimir(const string &nomePasta, const bool &compress, const int &max_code) {
   vector<string> arquivos = getFiles(nomePasta);
   vector<string> outNames = outNameFiles(arquivos, compress);
 
   string pastaDestino = compress ? "comprimidos" : "descomprimidos";
   fs::create_directory(pastaDestino);
 
+  double comprimento_medio_total = 0.0;
+
   for (int i = 0; i < arquivos.size(); i++) {
     string nomeArquivoOrigem = arquivos[i];
     string nomeArquivoDestino = outNames[i];
 
     istream *in = new ifstream(nomeArquivoOrigem, ios::binary);
-    ostream *out =
-        new ofstream(pastaDestino + '/' + nomeArquivoDestino, ios::binary);
+    ostream *out = new ofstream(pastaDestino + '/' + nomeArquivoDestino, ios::binary);
 
     if (compress) {
-      lzw::compress(*in, *out, max_code);
+      // L = N / M
+      // L - comprimento médio da codificação em bits por símbolo
+      // N - número total de bits após a compressão
+      // M - número total de símbolos no arquivo original
+
+      int total_bits = lzw::compress(*in, *out, max_code);
+
+      double comprimento_medio = static_cast<double>(total_bits) / fs::file_size(nomeArquivoOrigem);
+      std::cout << "L = " << std::setprecision(4) << comprimento_medio << nomeArquivoOrigem << std::endl;
+
+      comprimento_medio_total += comprimento_medio;
     } else {
       lzw::decompress(*in, *out, max_code);
     }
@@ -176,10 +199,16 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress,
     delete in;
     delete out;
   }
+
+  std::cout << std::endl;
+  std::cout << "--------------------------------------------" << std::endl;
+  std:cout << "(comprimento médio total da compressão)" << std::endl;
+  std::cout << "L = " << std::setprecision(4) << comprimento_medio_total << std::endl;
+  std::cout << "--------------------------------------------" << std::endl;
+  std::cout << std::endl;
 }
 
 int main(int argc, char *argv[]) {
-
   int opcao, opcaoTamDic;
   string nomePasta;
 
@@ -250,28 +279,6 @@ int main(int argc, char *argv[]) {
       break;
     }
   } while (opcao != 0);
-
-  // bool compress =
-  //     false;
-
-  // std::string nomeArquivoOrigem = "c_dick";
-
-  // std::string nomeArquivoDestino = "out_dick";
-
-  // std::istream *in = new std::ifstream(nomeArquivoOrigem, std::ios::binary);
-  // std::ostream *out = new std::ofstream(nomeArquivoDestino,
-  // std::ios::binary);
-
-  // std::vector<std::vector<char>> conteudoArquivosBinarios;
-
-  // if (compress) {
-  //   lzw::compress(*in, *out, max_code);
-  // } else {
-  //   lzw::decompress(*in, *out, max_code);
-  // }
-
-  // delete in;
-  // delete out;
 
   return 0;
 }
