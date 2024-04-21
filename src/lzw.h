@@ -29,7 +29,7 @@ namespace lzw {
         return static_cast<unsigned int>(std::ceil(std::log2(code + 1)));
     }
 
-    template<class INPUT, class OUTPUT> void compress(INPUT &input, OUTPUT &output, const unsigned int max_code, std::vector<std::vector<char>> &conteudoArquivosBinarios) {
+    template<class INPUT, class OUTPUT> void compress(INPUT &input, OUTPUT &output, const unsigned int max_code) {
         int flagEstrategiaDicionario = 0;
         
         input_symbol_stream<INPUT> in(input);

@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (compress) {
-    lzw::compress(*in, *out, max_code, conteudoArquivosBinarios);
+    lzw::compress(*in, *out, max_code);
   } else {
     lzw::decompress(*in, *out, max_code);
   }
