@@ -23,49 +23,6 @@ enum TamanhoDicionario {
 
 enum EstrategiaDicionario { RESETA = 0, MANTER = 1 };
 
-std::vector<char> lerArquivoBinario(const fs::path &arquivo) {
-  std::ifstream arquivoStream(arquivo, std::ios::binary);
-  std::vector<char> conteudo;
-
-  if (arquivoStream.is_open()) {
-    // Move o ponteiro do arquivo para o final para determinar o tamanho do
-    // arquivo
-    arquivoStream.seekg(0, std::ios::end);
-    std::streamsize tamanhoArquivo = arquivoStream.tellg();
-    arquivoStream.seekg(0, std::ios::beg);
-
-    // Redimensiona o vetor de conteúdo para o tamanho do arquivo
-    conteudo.resize(static_cast<size_t>(tamanhoArquivo));
-
-    // Lê o conteúdo do arquivo e armazena no vetor
-    arquivoStream.read(conteudo.data(), tamanhoArquivo);
-
-    arquivoStream.close();
-  } else {
-    std::cerr << "Não foi possível abrir o arquivo: " << arquivo << std::endl;
-  }
-
-  return conteudo;
-}
-
-void usage() {
-  std::cerr
-      << "Usage:\n"
-         "lzw [-max max_code] -c input output #compress file input to file "
-         "output\n"
-         "lzw [-max max_code] -c - output     #compress stdin to file otuput\n"
-         "lzw [-max max_code] -c input        #compress file input to stdout\n"
-         "lzw [-max max_code] -c              #compress stdin to stdout\n"
-         "lzw [-max max_code] -d input output #decompress file input to file "
-         "output\n"
-         "lzw [-max max_code] -d - output     #decompress stdin to file "
-         "otuput\n"
-         "lzw [-max max_code] -d input        #decompress file input to "
-         "stdout\n"
-         "lzw [-max max_code] -d              #decompress stdin to stdout\n";
-  exit(1);
-}
-
 // João
 #include <filesystem>
 #include <iomanip>
@@ -181,6 +138,7 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress,
   fs::create_directory(pastaDestino);
 
   double comprimento_medio_total = 0.0;
+  long double tempoTotal = 0.0;
 
   for (int i = 0; i < arquivos.size(); i++) {
     string nomeArquivoOrigem = arquivos[i];
@@ -211,11 +169,14 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress,
            << tempoDeCompressao << "ms" << endl;
 
       comprimento_medio_total += comprimento_medio;
+      tempoTotal += tempoDeCompressao;
     } else {
-      long double tempoDeDescomp = lzw::decompress(*in, *out, max_code, estrategiaAtual);
-			
-			cout << "Tempo de descompressao do arquivo " << nomeArquivoOrigem << ": "
-					 << tempoDeDescomp << "ms" << endl;
+      long double tempoDeDescomp =
+          lzw::decompress(*in, *out, max_code, estrategiaAtual);
+
+      cout << "Tempo de descompressao do arquivo " << nomeArquivoOrigem << ": "
+           << tempoDeDescomp << "ms" << endl;
+      tempoTotal += tempoDeDescomp;
     }
 
     delete in;
@@ -228,6 +189,7 @@ void comprimirDescomprimir(const string &nomePasta, const bool &compress,
   cout << "(comprimento médio total da compressão)" << std::endl;
   std::cout << "L = " << std::setprecision(4) << comprimento_medio_total
             << std::endl;
+	cout << "Tempo total de " << (compress ? "compressao" : "descompressao") << ": " << tempoTotal << "ms" << endl;
   std::cout << "--------------------------------------------" << std::endl;
   std::cout << std::endl;
 }

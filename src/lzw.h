@@ -31,6 +31,22 @@ namespace lzw {
         return static_cast<unsigned int>(std::ceil(std::log2(code + 1)));
     }
 
+    void saveAverageLengths(const std::vector<long double> &average_lengths,
+                            const std::string &filename) {
+      std::ofstream file(filename);
+      if (file.is_open()) { 
+        for (const auto &length : average_lengths) {
+          file << length << "\n"; 
+        }
+        file.close();
+        std::cout << "Array de comprimentos medios salvo com sucesso em '"
+                  << filename << "'." << std::endl;
+      } else {
+        std::cerr << "Nao foi possivel abrir o arquivo para escrita."
+                  << std::endl;
+      }
+    }
+
     template <class INPUT, class OUTPUT>
     std::pair<int, long double> compress(INPUT &input, OUTPUT &output,
                                          const unsigned int max_code,
@@ -49,8 +65,13 @@ namespace lzw {
 
       unsigned int total_bits = 0;
 
-      // inicio do calculo do tempo
+      // Início do cálculo do tempo
       auto start = std::chrono::high_resolution_clock::now();
+
+      std::vector<long double>
+          average_lengths; // Array para armazenar os comprimentos médios
+      unsigned int total_symbols =
+          0; // Contador para o número total de símbolos processados
 
       while (in >> c) {
         current_string = current_string + c;
@@ -65,22 +86,29 @@ namespace lzw {
             codes[current_string] = next_code++;
           }
 
-          current_string.erase(current_string.size() - 1);
-
           out << codes[current_string];
+          total_symbols++;
 
+          // Calcular o comprimento do código atual e armazená-lo
           unsigned int bits_used = out.get_code_size_bits();
-
           total_bits += bits_used;
+          average_lengths.push_back(static_cast<long double>(total_bits) /
+                                    total_symbols);
 
+          current_string.clear();
           current_string = c;
+        } else {
+          // Atualizar o total de símbolos para símbolos repetidos
+          total_symbols++;
         }
       }
 
-      // Fim do calculo do tempo
+      // Fim do cálculo do tempo
       auto finish = std::chrono::high_resolution_clock::now();
 
-    	long double duration = std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
+      long double duration =
+          std::chrono::duration_cast<std::chrono::milliseconds>(finish - start)
+              .count();
 
       if (current_string.size()) {
         out << codes[current_string];
@@ -88,11 +116,15 @@ namespace lzw {
         unsigned int bits_used = out.get_code_size_bits();
 
         total_bits += bits_used;
+        average_lengths.push_back(static_cast<long double>(total_bits) /
+                                  total_symbols);
       }
 
       std::streampos size = in.get_size();
 
       std::cout << "SIZE IN " << size << std::endl;
+
+      saveAverageLengths(average_lengths, "comprimentosMedios.txt");
 
       return std::make_pair(total_bits, duration);
     }
