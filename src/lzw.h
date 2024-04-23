@@ -65,7 +65,7 @@ namespace lzw {
 
       unsigned int total_bits = 0;
 
-      // Início do cálculo do tempo
+      // inicio do calculo do tempo
       auto start = std::chrono::high_resolution_clock::now();
 
       std::vector<long double>
@@ -86,16 +86,17 @@ namespace lzw {
             codes[current_string] = next_code++;
           }
 
+          current_string.erase(current_string.size() - 1);
+
           out << codes[current_string];
           total_symbols++;
 
-          // Calcular o comprimento do código atual e armazená-lo
           unsigned int bits_used = out.get_code_size_bits();
+
           total_bits += bits_used;
           average_lengths.push_back(static_cast<long double>(total_bits) /
                                     total_symbols);
 
-          current_string.clear();
           current_string = c;
         } else {
           // Atualizar o total de símbolos para símbolos repetidos
@@ -103,7 +104,7 @@ namespace lzw {
         }
       }
 
-      // Fim do cálculo do tempo
+      // Fim do calculo do tempo
       auto finish = std::chrono::high_resolution_clock::now();
 
       long double duration =
@@ -116,6 +117,7 @@ namespace lzw {
         unsigned int bits_used = out.get_code_size_bits();
 
         total_bits += bits_used;
+        total_symbols++;
         average_lengths.push_back(static_cast<long double>(total_bits) /
                                   total_symbols);
       }
